@@ -1,1 +1,1 @@
-# qsharp-elitzur-vaidman
+# Q# example of Elitzur-Vaidman bomb tester
