@@ -18,7 +18,6 @@
             for j in 0..n-2 {
                 Rx(PI()/IntAsDouble(n), qubit1);
                 CNOT(qubit1, qubit2);
-                let c1 = M(qubit2);
                 set result w/= j <- M(qubit2);
                 Reset(qubit2);
             }
