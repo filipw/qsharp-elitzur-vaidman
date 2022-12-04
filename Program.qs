@@ -77,28 +77,32 @@
     }
 
     operation AdvancedVariant(n : Int, iterations : Int) : Unit {
-        mutable wins = 0;
+        mutable successes = 0;
 
         for i in 1..iterations {
             use (q_tester, q_alarm) = (Qubit(), Qubit());
 
-            mutable result = [Zero, size = n+1];
+            mutable alarmTriggered = [Zero, size = n];
             for j in 0..n-1 {
+
+                // rotate by π/n
                 Ry(PI()/IntAsDouble(n), q_tester);
                 CNOT(q_tester, q_alarm);
-                set result w/= j <- M(q_alarm);
+
+                // we can now measure |00⟩ or |11⟩ only
+                // the probability amplitude of triggering the alarm (second qubit measures to |1⟩ is now sin(π/n)
+                set alarmTriggered w/= j <- M(q_alarm);
                 Reset(q_alarm);
             }
 
-            set result w/= n <- M(q_tester);
-            Reset(q_tester);
+            let workingAlarmIdentified = M(q_tester) == Zero;
 
-            let allZeroes = All(r -> r == Zero, result);
-            if (allZeroes) {
-                set wins += 1;
+            let success = All(r -> r == Zero, alarmTriggered) and workingAlarmIdentified;
+            if (success) {
+                set successes += 1;
             }
         }
 
-        Message($"Won: {IntAsDouble(wins)*100.0/IntAsDouble(iterations)}%");
+        Message($"Won: {IntAsDouble(successes)*100.0/IntAsDouble(iterations)}%");
     }
 }
