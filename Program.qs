@@ -103,6 +103,6 @@
             }
         }
 
-        Message($"Won: {IntAsDouble(successes)*100.0/IntAsDouble(iterations)}%");
+        Message($"Success rate: {IntAsDouble(successes)*100.0/IntAsDouble(iterations)}%");
     }
 }
