@@ -77,32 +77,42 @@
     }
 
     operation AdvancedVariant(n : Int, iterations : Int) : Unit {
-        mutable successes = 0;
+        for working in [false, true] {
+            mutable successes = 0;
+            Message("");
+            Message($"Alarm working? {working}");
 
-        for i in 1..iterations {
-            use (q_tester, q_alarm) = (Qubit(), Qubit());
+            for i in 1..iterations {
+                use (q_tester, q_alarm) = (Qubit(), Qubit());
 
-            mutable alarmTriggered = [Zero, size = n];
-            for j in 0..n-1 {
+                mutable alarmTriggered = [Zero, size = n];
+                for j in 0..n-1 {
 
-                // rotate by π/n
-                Ry(PI()/IntAsDouble(n), q_tester);
-                CNOT(q_tester, q_alarm);
+                    // rotate by π/n
+                    Ry(PI()/IntAsDouble(n), q_tester);
 
-                // we can now measure |00⟩ or |11⟩ only
-                // the probability amplitude of triggering the alarm (second qubit measures to |1⟩ is now sin(π/n)
-                set alarmTriggered w/= j <- M(q_alarm);
-                Reset(q_alarm);
+                    // if alarm is working, there is entanglemet between testing photon and the alarm triggering
+                    if (working) {
+                        CNOT(q_tester, q_alarm);
+                    } else {
+                        I(q_tester);
+                    }
+
+                    // we can now measure |00⟩ or |11⟩ only
+                    // the probability amplitude of triggering the alarm (second qubit measures to |1⟩ is now sin(π/n)
+                    set alarmTriggered w/= j <- M(q_alarm);
+                    Reset(q_alarm);
+                }
+
+                let workingAlarmIdentified = M(q_tester) == Zero;
+
+                let success = All(r -> r == Zero, alarmTriggered) and workingAlarmIdentified;
+                if (success) {
+                    set successes += 1;
+                }
             }
 
-            let workingAlarmIdentified = M(q_tester) == Zero;
-
-            let success = All(r -> r == Zero, alarmTriggered) and workingAlarmIdentified;
-            if (success) {
-                set successes += 1;
-            }
+            Message($"Success rate: {IntAsDouble(successes)*100.0/IntAsDouble(iterations)}%");
         }
-
-        Message($"Success rate: {IntAsDouble(successes)*100.0/IntAsDouble(iterations)}%");
     }
 }
